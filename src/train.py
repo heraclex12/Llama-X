@@ -24,13 +24,13 @@ import transformers
 from torch.utils.data import Dataset
 from transformers import Trainer
 from datasets import load_dataset
-import utils
+
 
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
-DEFAULT_EOS_TOKEN = "</s>"
-DEFAULT_BOS_TOKEN = "</s>"
-DEFAULT_UNK_TOKEN = "</s>"
+DEFAULT_EOS_TOKEN = "<|endoftext|>"
+DEFAULT_BOS_TOKEN = "<|endoftext|>"
+DEFAULT_UNK_TOKEN = "<|endoftext|>"
 PROMPT_DICT = {
     "prompt_input": (
         "Below is an instruction that describes a task, paired with an input that provides further context. "
@@ -47,7 +47,7 @@ PROMPT_DICT = {
 
 @dataclass
 class ModelArguments:
-    model_name_or_path: Optional[str] = field(default="facebook/opt-125m")
+    model_name_or_path: Optional[str] = field(default="bigcode/starcoder")
 
 
 @dataclass
@@ -172,7 +172,8 @@ def train_tokenize_function(examples, tokenizer):
     targets = [f"{output}{tokenizer.eos_token}" for output in examples['output']]
     data_dict = preprocess(sources, targets, tokenizer)
     return data_dict
-              
+
+
 def train():
     parser = transformers.HfArgumentParser((ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
@@ -195,12 +196,13 @@ def train():
             tokenizer=tokenizer,
             model=model,
         )
-    if "llama" in model_args.model_name_or_path:
+    if "starcoder" in model_args.model_name_or_path:
         tokenizer.add_special_tokens(
             {
                 "eos_token": DEFAULT_EOS_TOKEN,
                 "bos_token": DEFAULT_BOS_TOKEN,
                 "unk_token": DEFAULT_UNK_TOKEN,
+                "pad_token": DEFAULT_PAD_TOKEN,
             }
         )
 
